@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { UI, SENSOR_COPY } from './i18n.js?v=20260714-3';
+import { UI, SENSOR_COPY } from './i18n.js?v=20260714-7';
 
 const $ = (id) => document.getElementById(id);
 const colors = [
@@ -104,10 +104,11 @@ function evidence(data) {
 function healthView(frame) {
   if (!frame) return;
   const h = frame.health || {};
-  const score = Number(h.score);
+  const score = h.score == null ? NaN : Number(h.score);
+  const warning = Number.isFinite(score) && score <= 60;
   $('health-score').textContent = Number.isFinite(score) ? Math.round(score) : '—';
-  $('health-level').textContent = localizedLevel(h.level);
-  const gaugeColor = score < 30 ? '#ff5d66' : score < 60 ? '#ffbd59' : '#54e6df';
+  $('health-level').textContent = warning && score > 30 ? t('levelWarning') : localizedLevel(h.level);
+  const gaugeColor = warning ? '#ff334f' : score <= 75 ? '#ffbd59' : '#54e6df';
   $('gauge').style.background = `conic-gradient(${gaugeColor} ${Math.max(0, score || 0) * 3.6}deg, rgba(255,255,255,.06) 0deg)`;
   const risks = h.risks || {};
   const items = [
@@ -118,7 +119,7 @@ function healthView(frame) {
     const pct = Math.round((Number(risk) || 0) * 100);
     return `<div class="contributor"><header><span>${name}</span><b>${pct}% ${t('risk')}</b></header><div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
-  $('scene-state').textContent = h.level === 'critical' ? t('critical') : h.level === 'degraded' ? t('driftDetected') : t('nominal');
+  $('scene-state').textContent = warning ? (score <= 30 ? t('critical') : t('apuWarning')) : h.level === 'degraded' ? t('driftDetected') : t('nominal');
 }
 
 function hideSensorTooltip() {
@@ -387,8 +388,8 @@ function initScene() {
     const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, radius || .07, 8, false), pipeMat); model.add(mesh); return curve;
   }
 
-  // The visible topology follows the MetroPT APU: motor, compressor/oil separator,
-  // alternating dryer towers, pressure storage, valves and an electrical panel on one service skid.
+  // The visible topology follows the public MetroPT APU schematic: three-phase motor,
+  // compressor, cyclonic separator filter, dryer towers, reservoirs, valves and pneumatic panel.
   [-1.45, 1.45].forEach((z) => box(8.8, .18, .2, frameMetal, 0, -1.55, z));
   [-3.8, -1.2, 1.5, 3.8].forEach((x) => box(.18, .18, 3.1, frameMetal, x, -1.55, 0));
   [-3.8, 3.8].forEach((x) => [-1.45, 1.45].forEach((z) => cylinder(.14, .42, darkMetal, x, -1.82, z, 'y')));
@@ -406,7 +407,7 @@ function initScene() {
   const intake = new THREE.Mesh(new THREE.TorusGeometry(.36, .11, 10, 26), pipeMat); intake.rotation.x = Math.PI / 2; intake.position.set(-.3, .6, -.6); compressorGroup.add(intake);
   box(1.35, 1.12, .13, darkMetal, .25, -.3, -1.22);
   for (let y = -.75; y <= .15; y += .15) box(1.12, .035, .05, frameMetal, .25, y, -1.3);
-  const oilSeparator = cylinder(.46, 1.5, oilMat, .65, .05, .72, 'y');
+  const cyclonicSeparator = cylinder(.46, 1.5, oilMat, .65, .05, .72, 'y');
   const separatorCap = new THREE.Mesh(new THREE.SphereGeometry(.46, 22, 12)); separatorCap.material = oilMat; separatorCap.scale.y = .45; separatorCap.position.set(.65, .81, .72); model.add(separatorCap);
 
   const towers = [];
@@ -430,6 +431,19 @@ function initScene() {
   const beacon = cylinder(.1, .06, beaconMat, 3.42, .18, -.53, 'z');
   [0, 1, 2].forEach((i) => cylinder(.07, .04, new THREE.MeshBasicMaterial({ color: i === 0 ? 0x54e6df : 0x68808a }), 3.13 + i * .25, -.25, -.53, 'z'));
 
+  const warningLight = new THREE.PointLight(0xff1838, 0, 14); warningLight.position.set(1.2, 1.7, 1.2); model.add(warningLight);
+  const warningCoreMat = new THREE.MeshBasicMaterial({ color: 0xff1838, transparent: true, opacity: 0, depthTest: false, blending: THREE.AdditiveBlending });
+  const warningCore = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), warningCoreMat); warningCore.position.set(3.42, .72, -.92); warningCore.renderOrder = 12; model.add(warningCore);
+  const warningRings = [];
+  for (let index = 0; index < 3; index++) {
+    const material = new THREE.MeshBasicMaterial({ color: 0xff2745, transparent: true, opacity: 0, depthTest: false, blending: THREE.AdditiveBlending });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.28, .025, 8, 48), material); ring.rotation.x = Math.PI / 2; ring.position.copy(warningCore.position); ring.userData.phase = index / 3; ring.renderOrder = 11; model.add(ring); warningRings.push(ring);
+  }
+  const warningBaseMat = new THREE.MeshBasicMaterial({ color: 0xff1838, transparent: true, opacity: 0, depthTest: false, blending: THREE.AdditiveBlending });
+  const warningBase = new THREE.Mesh(new THREE.TorusGeometry(4.2, .035, 8, 96), warningBaseMat); warningBase.rotation.x = Math.PI / 2; warningBase.position.y = -1.5; warningBase.scale.set(1, .4, 1); warningBase.renderOrder = 10; model.add(warningBase);
+  const warningCageMat = new THREE.LineBasicMaterial({ color: 0xff2745, transparent: true, opacity: 0, depthTest: false, blending: THREE.AdditiveBlending });
+  const warningCage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(9.25, 3.65, 3.45)), warningCageMat); warningCage.position.y = -.05; warningCage.renderOrder = 9; model.add(warningCage);
+
   const flowCurve = pipe([[-1.05, .2, -.25], [.25, .95, -.1], [1.2, 1.2, 0], [2.0, 1.25, 0], [2.65, .45, .15], [2.5, -.75, 0]], .075);
   pipe([[.65, .8, .72], [.7, 1.22, .72], [1.5, 1.3, .72], [2, 1.18, .72]], .055);
   pipe([[.65, .8, .72], [.7, 1.35, -.72], [2, 1.18, -.72]], .055);
@@ -449,37 +463,107 @@ function initScene() {
     dryer: { label: 'partDryer', anchor: [2, 1.5, 0] },
     reservoir: { label: 'partReservoir', anchor: [2.15, -.25, 0] },
     panel: { label: 'partPanel', anchor: [3.42, .72, -.92] },
-    pipe: { label: 'partPipe', anchor: [2.65, .58, .15] }
+    pipe: { label: 'partPipe', anchor: [2.65, .58, .15] },
+    outlet: { label: 'partOutlet', anchor: [1.2, 1.2, 0] },
+    apu: { label: 'partApu', anchor: [0, 1.55, -1.2] }
   };
   const signalPart = {
     tp2: 'compressor', tp3: 'panel', h1: 'separator', dv_pressure: 'dryer', reservoirs: 'reservoir',
-    oil_temperature: 'compressor', motor_current: 'motor', comp: 'intake', dv_electric: 'dryer', towers: 'dryer',
+    oil_temperature: 'compressor', motor_current: 'motor', comp: 'intake', dv_electric: 'outlet', towers: 'dryer',
     mpg: 'reservoir', lps: 'reservoir', pressure_switch: 'dryer', oil_level: 'separator', flow_impulse: 'pipe',
-    health_score: 'panel', load_duty_1h: 'motor', starts_1h: 'motor', pressure_decay_bar_min: 'reservoir', pressure_recovery_bar_min: 'reservoir'
+    health_score: 'apu', load_duty_1h: 'motor', starts_1h: 'motor', pressure_decay_bar_min: 'reservoir', pressure_recovery_bar_min: 'reservoir'
   };
   let markerRecords = [];
   function syncMarkers() {
     const groups = {};
     selected.forEach((name, index) => { const part = signalPart[name] || 'panel'; (groups[part] ||= []).push({ name: name, color: colors[index % colors.length] }); });
-    markerHost.innerHTML = Object.keys(groups).map((part) => {
-      const rows = groups[part].map((item) => `<small><i style="background:${item.color}"></i>${escapeHtml(sensorCopy(item.name)[0])}</small>`).join('');
-      return `<div class="equipment-marker" data-part="${part}"><span></span><label><b>${escapeHtml(t(markerParts[part].label))}</b>${rows}</label></div>`;
+    const parts = Object.keys(groups);
+    const links = parts.map((part) => `<path data-link="${part}" style="stroke:${groups[part][0].color}"></path>`).join('');
+    markerHost.innerHTML = `<svg class="marker-links" aria-hidden="true">${links}</svg>` + parts.map((part) => {
+      const rows = groups[part].map((item) => {
+        const copy = sensorCopy(item.name);
+        return `<small data-signal="${item.name}"><span><i style="background:${item.color}"></i>${escapeHtml(copy[0])}</span><em>${escapeHtml(copy[1])}</em></small>`;
+      }).join('');
+      return `<div class="equipment-marker" data-part="${part}"><span class="equipment-pin"></span><label><b>${escapeHtml(t(markerParts[part].label))}</b>${rows}</label></div>`;
     }).join('');
     markerRecords = Array.from(markerHost.querySelectorAll('.equipment-marker')).map((element) => {
       const anchor = markerParts[element.dataset.part].anchor;
-      return { element: element, anchor: new THREE.Vector3(anchor[0], anchor[1], anchor[2]) };
+      return {
+        element: element, pin: element.querySelector('.equipment-pin'), label: element.querySelector('label'),
+        path: markerHost.querySelector(`[data-link="${element.dataset.part}"]`),
+        rows: Array.from(element.querySelectorAll('[data-signal]')), signals: groups[element.dataset.part].map((item) => item.name),
+        baseColor: groups[element.dataset.part][0].color, anchor: new THREE.Vector3(anchor[0], anchor[1], anchor[2]), side: ''
+      };
+    });
+  }
+  function relatedWarningSignals(health) {
+    const names = new Set(['health_score']); const risks = health.risks || {};
+    const contributors = [
+      { risk: Number(risks.pressure_decay) || 0, names: ['pressure_decay_bar_min', 'reservoirs', 'tp3', 'comp'] },
+      { risk: Number(risks.pressure_recovery) || 0, names: ['pressure_recovery_bar_min', 'reservoirs', 'tp2', 'tp3', 'dv_pressure', 'dv_electric'] },
+      { risk: Number(risks.starts) || 0, names: ['starts_1h', 'motor_current', 'comp', 'dv_electric'] },
+      { risk: Number(risks.load_duty) || 0, names: ['load_duty_1h', 'motor_current', 'comp', 'dv_electric'] }
+    ];
+    const maximum = contributors.reduce((value, contributor) => Math.max(value, contributor.risk), 0);
+    contributors.forEach((contributor) => {
+      if (contributor.risk >= .35 || (maximum > 0 && contributor.risk === maximum)) contributor.names.forEach((name) => names.add(name));
+    });
+    return names;
+  }
+  function layoutMarkerColumn(records, side, width, height) {
+    if (!records.length) return;
+    const topMargin = 48, bottomMargin = 10, gap = 8, available = Math.max(40, height - topMargin - bottomMargin);
+    records.sort((a, b) => a.anchorY - b.anchorY);
+    const naturalHeight = records.reduce((sum, record) => sum + record.height, 0) + gap * (records.length - 1);
+    const widest = records.reduce((maximum, record) => Math.max(maximum, record.width), 1);
+    const horizontalScale = Math.max(.35, (width / 2 - 24) / widest);
+    const scale = Math.min(1, horizontalScale, available / Math.max(1, naturalHeight));
+    const scaledGap = gap * scale;
+    let cursor = topMargin;
+    records.forEach((record) => {
+      record.scale = scale; record.visualWidth = record.width * scale; record.visualHeight = record.height * scale;
+      record.targetTop = Math.max(cursor, Math.min(record.anchorY - record.visualHeight / 2, height - bottomMargin - record.visualHeight));
+      cursor = record.targetTop + record.visualHeight + scaledGap;
+    });
+    if (cursor - scaledGap > height - bottomMargin) {
+      cursor = height - bottomMargin;
+      for (let index = records.length - 1; index >= 0; index--) {
+        const record = records[index]; record.targetTop = Math.min(record.targetTop, cursor - record.visualHeight); cursor = record.targetTop - scaledGap;
+      }
+    }
+    if (records[0].targetTop < topMargin) {
+      cursor = topMargin;
+      records.forEach((record) => { record.targetTop = cursor; cursor += record.visualHeight + scaledGap; });
+    }
+    records.forEach((record) => {
+      const labelLeft = side === 'left' ? 12 : width - 12 - record.visualWidth;
+      record.label.style.left = labelLeft + 'px'; record.label.style.top = record.targetTop + 'px';
+      record.label.style.transform = `scale(${scale})`; record.label.style.transformOrigin = 'top left';
+      const endX = side === 'left' ? labelLeft + record.visualWidth : labelLeft;
+      const endY = record.targetTop + record.visualHeight / 2;
+      const bendX = record.anchorX + (endX - record.anchorX) * .55;
+      record.path.setAttribute('d', `M ${record.anchorX} ${record.anchorY} C ${bendX} ${record.anchorY}, ${bendX} ${endY}, ${endX} ${endY}`);
     });
   }
   function updateMarkers() {
     if (!markerRecords.length) return;
     const rect = host.getBoundingClientRect(); model.updateWorldMatrix(true, true); camera.updateMatrixWorld();
+    const visibleRecords = [];
     markerRecords.forEach((record) => {
       const screen = record.anchor.clone(); model.localToWorld(screen); screen.project(camera);
       const visible = screen.z > -1 && screen.z < 1 && screen.x > -1.15 && screen.x < 1.15 && screen.y > -1.15 && screen.y < 1.15;
       record.element.style.opacity = visible ? '1' : '0';
-      record.element.style.left = ((screen.x + 1) * .5 * rect.width) + 'px';
-      record.element.style.top = ((1 - screen.y) * .5 * rect.height) + 'px';
+      record.path.style.opacity = visible ? '1' : '0';
+      if (!visible) return;
+      record.anchorX = (screen.x + 1) * .5 * rect.width; record.anchorY = (1 - screen.y) * .5 * rect.height;
+      record.pin.style.left = record.anchorX + 'px'; record.pin.style.top = record.anchorY + 'px';
+      record.width = record.label.offsetWidth; record.height = record.label.offsetHeight;
+      visibleRecords.push(record);
     });
+    const unassigned = visibleRecords.filter((record) => !record.side).sort((a, b) => a.anchorX - b.anchorX);
+    unassigned.forEach((record, index) => { record.side = index < Math.ceil(unassigned.length / 2) ? 'left' : 'right'; });
+    layoutMarkerColumn(visibleRecords.filter((record) => record.side === 'left'), 'left', rect.width, rect.height);
+    layoutMarkerColumn(visibleRecords.filter((record) => record.side === 'right'), 'right', rect.width, rect.height);
   }
   sceneMarkerApi = { sync: syncMarkers }; syncMarkers();
 
@@ -498,7 +582,10 @@ function initScene() {
     const targetLoad = clamp(Math.max((current - 1.5) / 8, Number(sensors.dv_electric) || 0), 0, 1);
     const targetPressure = clamp((Number(sensors.reservoirs) || 0) / 11, 0, 1.15);
     const targetTemperature = clamp(((Number(sensors.oil_temperature) || 40) - 45) / 55, 0, 1);
-    const score = Number(health.score), targetHealth = Number.isFinite(score) ? score : 100;
+    const score = health.score == null ? NaN : Number(health.score), targetHealth = Number.isFinite(score) ? score : 100;
+    const alertActive = Number.isFinite(score) && score <= 60;
+    const alertStrength = alertActive ? .58 + .42 * clamp((60 - score) / 60, 0, 1) : 0;
+    const warningSignals = alertActive ? relatedWarningSignals(health) : null;
     const targetFlow = clamp(Math.max(Number(sensors.flow_impulse) || 0, targetLoad * .7), 0, 1);
     if (playing) {
       visualLoad += (targetLoad - visualLoad) * .055; visualPressure += (targetPressure - visualPressure) * .045;
@@ -514,14 +601,38 @@ function initScene() {
     motorMat.emissiveIntensity = .2 + visualLoad * 1.25; motorMat.emissive.set(visualLoad > .25 ? 0x157f7a : 0x072427);
     compressorMat.color.copy(coolColor).lerp(hotColor, visualTemperature); compressorMat.emissive.copy(compressorMat.color); compressorMat.emissiveIntensity = .18 + visualTemperature * .7;
     reservoir.scale.set(1 + visualPressure * .025, 1 + visualPressure * .06, 1 + visualPressure * .06); reservoirMat.opacity = .48 + visualPressure * .34;
-    reservoirMat.color.set(visualHealth < 30 ? 0xff5d66 : visualHealth < 60 ? 0xffbd59 : 0x477a91);
+    reservoirMat.color.set(alertActive ? 0xff334f : 0x477a91);
     const activeTower = Number(sensors.towers) ? 1 : 0;
     towers.forEach((tower, index) => { const active = index === activeTower ? .85 : .1; tower.scale.setScalar(1 + active * visualLoad * .035); towerMaterials[index].emissive.set(active ? 0x16a69d : 0x082122); towerMaterials[index].emissiveIntensity = .18 + active * (.35 + visualFlow); });
     dryerValve.rotation.x = (Number(sensors.dv_electric) || 0) * Math.PI * .5;
-    beaconMat.color.set(visualHealth < 30 ? 0xff334f : visualHealth < 60 ? 0xffbd59 : 0x54e6df); beaconMat.opacity = .45 + .45 * Math.abs(Math.sin(motionTime * (visualHealth < 60 ? .009 : .002)));
+    const warningPulse = .35 + .65 * Math.abs(Math.sin(motionTime * .009));
+    const warningStrobe = Math.pow(Math.abs(Math.sin(motionTime * .018)), 6);
+    beaconMat.color.set(alertActive ? 0xff1838 : 0x54e6df); beaconMat.opacity = alertActive ? .62 + .38 * warningStrobe : .45 + .45 * Math.abs(Math.sin(motionTime * .002));
+    warningLight.intensity = alertStrength * (2.8 + warningStrobe * 7.5); warningLight.distance = 11 + warningPulse * 6;
+    warningCoreMat.opacity = alertStrength * (.45 + warningStrobe * .55); warningCore.scale.setScalar(1 + warningStrobe * 1.8);
+    warningCageMat.opacity = alertStrength * (.12 + warningStrobe * .48);
+    warningBaseMat.opacity = alertStrength * (.18 + warningPulse * .42);
+    const basePulse = 1 + warningPulse * .06; warningBase.scale.set(basePulse, .4 * basePulse, 1); warningBase.rotation.z = motionTime * .00032;
+    warningRings.forEach((ring) => {
+      const phase = (motionTime * .00042 + ring.userData.phase) % 1;
+      ring.scale.setScalar(.65 + phase * 4.1); ring.material.opacity = alertStrength * (1 - phase) * .86; ring.rotation.z = motionTime * .0007;
+    });
+    markerRecords.forEach((record) => {
+      const related = Boolean(warningSignals && record.signals.some((name) => warningSignals.has(name)));
+      const modalGlow = related ? alertStrength * (.52 + warningStrobe * .48) : 0;
+      record.element.classList.toggle('warning-related', related);
+      record.rows.forEach((row) => row.classList.toggle('warning-related-sensor', Boolean(related && warningSignals.has(row.dataset.signal))));
+      record.label.style.borderColor = related ? `rgba(255,39,69,${.55 + modalGlow * .45})` : '';
+      record.label.style.background = related ? `linear-gradient(145deg,rgba(74,5,17,${.7 + modalGlow * .22}),rgba(12,5,9,.94))` : '';
+      record.label.style.boxShadow = related ? `0 0 ${12 + modalGlow * 25}px rgba(255,24,56,${.3 + modalGlow * .48}),0 10px 32px rgba(0,0,0,.48)` : '';
+      record.pin.style.background = related ? '#ff1838' : '';
+      record.pin.style.boxShadow = related ? `0 0 0 ${4 + modalGlow * 4}px rgba(255,24,56,.18),0 0 ${14 + modalGlow * 24}px #ff1838` : '';
+      record.path.style.stroke = related ? '#ff2745' : record.baseColor;
+      record.path.style.strokeWidth = related ? String(1.7 + modalGlow * 1.4) : '';
+    });
     pipeMat.emissiveIntensity = .25 + visualFlow * 1.2;
     flow.forEach((particle) => { const q = (motionTime * .00007 * (.35 + visualFlow * 2.5) + particle.userData.offset) % 1; particle.position.copy(flowCurve.getPointAt(q)); particle.scale.setScalar(.7 + visualFlow * 1.25); particle.material.opacity = .18 + visualFlow * .78; });
-    leaks.forEach((particle) => { const severity = clamp((65 - visualHealth) / 45, 0, 1); const q = (motionTime * .00016 + particle.userData.offset) % 1; particle.material.opacity = severity * (1 - q) * .9; particle.scale.setScalar(.7 + severity * 1.8 * q); particle.position.set(3.08 + q * 1.3, -.92 + q * 1.15, .12 + Math.sin(q * 18 + particle.userData.offset * 6) * q * .7); });
+    leaks.forEach((particle) => { const q = (motionTime * .00016 + particle.userData.offset) % 1; particle.material.opacity = alertStrength * (1 - q) * .95; particle.scale.setScalar(.7 + alertStrength * 2.3 * q); particle.position.set(3.08 + q * 1.3, -.92 + q * 1.15, .12 + Math.sin(q * 18 + particle.userData.offset * 6) * q * .7); });
     updateMarkers();
     renderer.render(scene, camera);
   }

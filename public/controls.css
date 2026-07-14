@@ -144,20 +144,34 @@
   pointer-events: none;
 }
 
-.equipment-marker {
+.marker-links {
   position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  transform: translate(-6px, -50%);
-  transition: opacity .15s ease;
-  will-change: left, top;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.equipment-marker > span {
+.marker-links path {
+  fill: none;
+  stroke-width: 1.35;
+  stroke-dasharray: 3 5;
+  stroke-linecap: round;
+  opacity: .82;
+  filter: drop-shadow(0 0 3px rgba(84, 230, 223, .48));
+}
+
+.equipment-marker {
+  position: absolute;
+  inset: 0;
+  transition: opacity .15s ease;
+}
+
+.equipment-marker > .equipment-pin {
+  position: absolute;
   width: 12px;
   height: 12px;
-  flex: 0 0 12px;
+  transform: translate(-50%, -50%);
   border: 2px solid #e8ffff;
   border-radius: 50%;
   background: #54e6df;
@@ -165,14 +179,12 @@
 }
 
 .equipment-marker label {
+  position: absolute;
   display: flex;
-  min-width: 112px;
-  max-width: 210px;
-  max-height: 112px;
+  width: 210px;
   padding: 7px 9px;
-  overflow: hidden;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
   border: 1px solid rgba(84, 230, 223, .32);
   border-radius: 9px;
   background: rgba(4, 17, 23, .88);
@@ -188,12 +200,35 @@
 
 .equipment-marker label small {
   display: block;
-  overflow: hidden;
   color: #9bbabb;
   font-size: 8px;
   line-height: 1.25;
+}
+
+.equipment-marker label small + small {
+  padding-top: 4px;
+  border-top: 1px solid rgba(156, 222, 226, .1);
+}
+
+.equipment-marker label small span {
+  display: block;
+  overflow: hidden;
+  color: #b9d4d4;
+  font-weight: 700;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.equipment-marker label small em {
+  display: -webkit-box;
+  margin: 2px 0 0 11px;
+  overflow: hidden;
+  color: #78999b;
+  font-size: 7px;
+  font-style: normal;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .equipment-marker label i {
@@ -202,6 +237,20 @@
   height: 6px;
   margin-right: 5px;
   border-radius: 50%;
+}
+
+.equipment-marker.warning-related label b {
+  color: #ffe4e8;
+  text-shadow: 0 0 9px rgba(255, 39, 69, .8);
+}
+
+.equipment-marker label small.warning-related-sensor span {
+  color: #ff8ca0;
+  text-shadow: 0 0 7px rgba(255, 39, 69, .65);
+}
+
+.equipment-marker label small.warning-related-sensor em {
+  color: #d9909c;
 }
 
 .legend {

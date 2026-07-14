@@ -1,18 +1,20 @@
-# Machbase Neo · MetroPT Condition Intelligence
+# Machbase Neo · MetroPT-3 Railway APU Condition Intelligence
 
-An English-language, 90-second guided demo that lets a mixed sales and technical audience see a real train air compressor drift before an officially labeled air-leak interval. It uses the complete MetroPT-3 dataset, a transparent condition-health formula, Machbase Neo automatic whole-JSON rollups, and a locally bundled Three.js visualization.
+An English/Korean, 90-second guided demo that lets a mixed sales and technical audience explore a metro train compressor Air Production Unit (APU) before an officially reported air-leak interval. It uses the complete MetroPT-3 dataset, a transparent derived condition-health formula, Machbase Neo automatic whole-JSON rollups, and a locally bundled Three.js visualization.
 
 The demo makes no ML accuracy or ROI claim. Its derived alerts are explainable condition-health heuristics; official failure intervals remain visibly distinguished from derived events.
 
 ## Why MetroPT-3
 
-- 1,516,948 telemetry timestamps from a train air-production unit, February through August 2020
+- 1,516,948 telemetry timestamps from a metro train compressor Air Production Unit (APU), February through August 2020
 - 15 pressure, temperature, current, valve, switch, and impulse signals—about 22.75 million sensor values
 - four failure intervals published by the dataset authors
-- a visually understandable asset: compressor, motor, dryer towers, reservoir, valves, and air flow
+- a visually understandable asset: compressor, three-phase motor, cyclonic separator filter, dryer towers, reservoirs, valves, pneumatic panel, and air flow
 - a permissive [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/)
 
 Source: [MetroPT-3 at the UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/791/metropt%2B3%2Bdataset).
+
+The public source identifies the monitored asset as a metro train compressor APU. It does not disclose a manufacturer, exact compressor model, vehicle number, or fleet asset identifier, so this demo does not invent them.
 
 > The CSV contains roughly 9–10 second intervals (about 0.1 Hz), despite a conflicting 1 Hz statement in the bundled dataset description. This project reports the observed 1,516,948 timestamps, not a fabricated sample frequency. The source timezone is unspecified; the app preserves source clock values and labels them “Dataset local time — timezone unspecified.”
 
@@ -124,7 +126,7 @@ lib/api.js             read-only database query layer and evidence envelopes
 lib/metro.js           timestamps, rolling features, scoring, event persistence
 lib/schema.js          tag table, JSON rollups, and JSON indexes
 scripts/               download guidance, schema, streaming ingest, self-test
-public/                 English UI, Three.js APU scene, charts, timeline
+public/                 English/Korean UI, Three.js APU scene, charts, timeline
 ```
 
 Three.js and OrbitControls are bundled locally so the running demo needs no internet connection. MetroPT-3 itself is not redistributed by this repository; retain the UCI attribution when demonstrating or republishing derived materials.
