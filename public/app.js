@@ -1,16 +1,26 @@
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { UI, SENSOR_COPY } from './i18n.js?v=20260714-7';
+import { UI, SENSOR_COPY } from './i18n.js?v=20260714-10';
+import { createApuAudio } from './assets/audio.js?v=20260714-1';
 
 const $ = (id) => document.getElementById(id);
 const colors = [
   '#54e6df', '#ffbd59', '#68a5ff', '#ff5d66', '#b8f56a', '#b18cff', '#ff78c8', '#ff8c42', '#47c6a3', '#d7f3ff',
   '#ef6cff', '#77dd77', '#4d8dff', '#ffd166', '#ff7f6e', '#c4a7ff', '#2dd4bf', '#fb7185', '#a3e635', '#38bdf8'
 ];
-const selected = ['reservoirs', 'motor_current', 'oil_temperature', 'health_score'];
+const SOURCE_SIGNALS = [
+  'tp2', 'tp3', 'h1', 'dv_pressure', 'reservoirs', 'oil_temperature', 'motor_current',
+  'comp', 'dv_electric', 'towers', 'mpg', 'lps', 'pressure_switch', 'oil_level', 'flow_impulse'
+];
+const EVENT_TRACKS = [
+  { type: 'early_warning', tag: 'metropt-3-uci-791.apu-01.event.derived.early_warning', label: 'eventEarlyWarning', description: 'eventEarlyWarningDescription' },
+  { type: 'critical_condition', tag: 'metropt-3-uci-791.apu-01.event.derived.critical_condition', label: 'eventCriticalCondition', description: 'eventCriticalConditionDescription' },
+  { type: 'recovery', tag: 'metropt-3-uci-791.apu-01.event.derived.recovery', label: 'eventRecovery', description: 'eventRecoveryDescription' },
+  { type: 'air_leak', tag: 'metropt-3-uci-791.apu-01.event.official.air_leak', label: 'eventOfficialLeak', description: 'eventOfficialLeakDescription' }
+];
+const selected = ['reservoirs', 'motor_current', 'oil_temperature', 'dv_electric'];
 const PLAYBACK_INTERVAL_MS = 100;
 const PLAYBACK_STEP_MS = 60000;
-const PLAYBACK_JUMP_MS = 600000;
 const CHART_REFRESH_MS = 2000;
 const EVIDENCE_REFRESH_MS = 1000;
 let manifest, currentFrame, signalData = [], playing = true, tourStart = 0, tourFrame = 0, userExploring = false;
@@ -31,6 +41,7 @@ let sensorRefreshTimer = null;
 let sceneMarkerApi = null;
 let warningChartPulse = 0;
 let lastWarningChartDraw = 0;
+const apuAudio = createApuAudio();
 
 async function api(path) {
   const response = await fetch('/api/' + path);
@@ -46,7 +57,7 @@ function compact(n) {
   return String(n);
 }
 function localClock(value) { return String(value || '').replace('T', ' ').replace('.000Z', '').replace('Z', ''); }
-function escapeHtml(text) { return String(text).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+function escapeHtml(text) { return String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function t(key) { return UI[language][key] || UI.en[key] || key; }
 function setMode(key) { modeKey = key; $('mode').textContent = t(key); }
 function setTimeline(key) {
@@ -64,6 +75,16 @@ function localizedLevel(level) {
   return t(key);
 }
 function syncSceneMarkers() { if (sceneMarkerApi) sceneMarkerApi.sync(); }
+
+function updateSoundButton() {
+  const button = $('sound-toggle');
+  const enabled = apuAudio.isEnabled();
+  const key = enabled ? 'soundMute' : 'soundEnable';
+  button.textContent = (enabled ? '◉ ' : '♪ ') + t(key);
+  button.setAttribute('aria-pressed', String(enabled));
+  button.setAttribute('aria-label', t(key));
+  button.title = t(key);
+}
 
 function relatedWarningSignals(health) {
   const names = new Set(['health_score']); const risks = health.risks || {};
@@ -83,10 +104,30 @@ function relatedWarningSignals(health) {
 function renderEventMarkers() {
   if (!manifest) return;
   const min = Date.parse(manifest.minTime), span = Date.parse(manifest.maxTime) - min;
-  $('event-markers').innerHTML = manifest.events.filter((event) => event.event.origin === 'official').map((event) => {
-    const position = (Date.parse(event.time) - min) / span * 100;
-    return `<i title="${escapeHtml(t('officialEvent'))}" style="left:${position}%"></i>`;
+  $('event-markers').innerHTML = EVENT_TRACKS.map((track) => {
+    const markers = manifest.events.filter((item) => item.event.type === track.type).map((item) => {
+      const event = item.event || {};
+      const position = Math.max(0, Math.min(100, (Date.parse(item.time) - min) / span * 100));
+      const edge = position < 14 ? ' tooltip-start' : position > 86 ? ' tooltip-end' : '';
+      const details = [
+        t(track.description),
+        t('eventRecordedAt') + ': ' + localClock(item.time),
+        event.persistence_started ? t('eventPersistenceStarted') + ': ' + localClock(event.persistence_started) : '',
+        event.end ? t('eventIntervalEnd') + ': ' + localClock(event.end) : '',
+        t('eventTag') + ': ' + track.tag
+      ].filter(Boolean);
+      const tooltip = details.join('\n');
+      return `<button type="button" class="event-marker ${track.type}${edge}" style="left:${position}%" aria-label="${escapeHtml(tooltip)}"><span class="event-tooltip"><strong>${escapeHtml(t(track.label))}</strong>${details.map((detail) => `<small>${escapeHtml(detail)}</small>`).join('')}</span></button>`;
+    }).join('');
+    return `<div class="event-track ${track.type}"><span class="event-track-label">${escapeHtml(t(track.label))}</span><div class="event-track-axis">${markers}</div></div>`;
   }).join('');
+}
+
+function renderFreeExplorerCopy() {
+  const title = $('chapter-title');
+  title.textContent = t('freeTitle');
+  title.classList.toggle('compact-korean-title', language === 'ko');
+  $('chapter-copy').textContent = t('freeCopy');
 }
 
 function applyLanguage() {
@@ -98,12 +139,13 @@ function applyLanguage() {
   });
   document.querySelectorAll('[data-i18n-aria]').forEach((element) => element.setAttribute('aria-label', t(element.dataset.i18nAria)));
   $('language-toggle').textContent = t('language');
+  updateSoundButton();
   setMode(modeKey); setTimeline(timelineKey); setWindow(windowKey);
   if (!manifest) return;
   sensorPicker(); prepareChart(); drawChart(); healthView(currentFrame);
   renderEventMarkers(); evidence(currentFrame && currentFrame.evidence ? currentFrame : manifest);
   if (userExploring) {
-    $('chapter-title').textContent = t('freeTitle'); $('chapter-copy').textContent = t('freeCopy');
+    renderFreeExplorerCopy();
   } else {
     renderChapterCopy(tourFrame);
   }
@@ -123,6 +165,7 @@ function healthView(frame) {
   const h = frame.health || {};
   const score = h.score == null ? NaN : Number(h.score);
   const warning = Number.isFinite(score) && score <= 60;
+  $('sound-toggle').classList.toggle('warning', warning);
   $('health-score').textContent = Number.isFinite(score) ? Math.round(score) : '—';
   $('health-level').textContent = warning && score > 30 ? t('levelWarning') : localizedLevel(h.level);
   const gaugeColor = warning ? '#ff334f' : score <= 75 ? '#ffbd59' : '#54e6df';
@@ -150,7 +193,7 @@ function showSensorTooltip(name) {
 }
 
 function sensorPicker() {
-  const names = Object.keys(manifest.signals);
+  const names = SOURCE_SIGNALS.filter((name) => manifest.signals[name]);
   hideSensorTooltip();
   $('sensor-picker').innerHTML = names.map((name) => `<button type="button" data-signal="${name}" class="${selected.includes(name) ? 'active' : ''}" aria-pressed="${selected.includes(name)}">${escapeHtml(sensorCopy(name)[0])}</button>`).join('');
   $('sensor-picker').querySelectorAll('button').forEach((button) => {
@@ -265,7 +308,7 @@ async function loadAt(time, preserveStory = false, options = {}) {
       evidence(frame);
       lastPlaybackEvidence = renderTime;
     }
-    if (!preserveStory && userExploring) { $('chapter-title').textContent = t('freeTitle'); $('chapter-copy').textContent = t('freeCopy'); }
+    if (!preserveStory && userExploring) renderFreeExplorerCopy();
     if (frame.skippedGap) setTimeline(seekMode === 'prev' ? 'skippedPrev' : 'skippedNext');
     if (options.playback) {
       const chartDue = options.forceChart || renderTime - lastChartRefresh >= CHART_REFRESH_MS;
@@ -313,7 +356,9 @@ function invalidateChartRefresh() {
 
 function renderChapterCopy(index) {
   const item = manifest.chapters[index]; const copy = UI[language].stories[item.id] || UI.en.stories[item.id];
-  $('chapter-index').textContent = String(index + 1).padStart(2, '0') + ' / 05'; $('chapter-title').textContent = copy[0]; $('chapter-copy').textContent = copy[1];
+  const title = $('chapter-title');
+  title.classList.remove('compact-korean-title');
+  $('chapter-index').textContent = String(index + 1).padStart(2, '0') + ' / 05'; title.textContent = copy[0]; $('chapter-copy').textContent = copy[1];
 }
 function chapter(index) {
   const item = manifest.chapters[index]; renderChapterCopy(index);
@@ -378,16 +423,17 @@ async function advancePlayback() {
   }
 }
 
-async function jumpPlayback(direction) {
+async function jumpPlayback(offsetMs) {
   if (transportLoading || !manifest) return;
+  const direction = Math.sign(offsetMs);
+  if (!direction) return;
   transportLoading = true;
-  const resume = playing; playing = false; playbackLoading = true; scrubbing = false; userExploring = true;
+  playing = false; playbackLoading = true; scrubbing = false; userExploring = true;
   const min = Date.parse(manifest.minTime), max = Date.parse(manifest.maxTime);
   const current = currentFrame ? Date.parse(currentFrame.time) : timeFromSlider();
-  const target = Math.max(min, Math.min(max, current + direction * PLAYBACK_JUMP_MS));
+  const target = Math.max(min, Math.min(max, current + offsetMs));
   const result = await loadAt(target, false, { seek: direction > 0 ? 'next' : 'prev', playback: true });
-  playbackLoading = false; transportLoading = false; playing = resume; lastExplorerAdvance = performance.now();
-  setMode('freeExplorer'); $('play').textContent = playing ? 'Ⅱ' : '▶';
+  playbackLoading = false; transportLoading = false; resumeExplorerPlayback();
   if (!result.ok && !result.superseded) $('scene-state').textContent = direction > 0 ? t('endOfData') : t('startOfData');
 }
 
@@ -608,6 +654,7 @@ function initScene() {
     const alertStrength = alertActive ? .58 + .42 * clamp((60 - score) / 60, 0, 1) : 0;
     const warningSignals = alertActive ? relatedWarningSignals(health) : null;
     const targetFlow = clamp(Math.max(Number(sensors.flow_impulse) || 0, targetLoad * .7), 0, 1);
+    apuAudio.sync(frame, playing && !document.hidden, motionTime);
     if (playing) {
       visualLoad += (targetLoad - visualLoad) * .055; visualPressure += (targetPressure - visualPressure) * .045;
       visualTemperature += (targetTemperature - visualTemperature) * .035; visualHealth += (targetHealth - visualHealth) * .04; visualFlow += (targetFlow - visualFlow) * .05;
@@ -677,10 +724,17 @@ async function boot() {
 
 $('retry').addEventListener('click', boot); $('restart').addEventListener('click', restartTour);
 $('language-toggle').addEventListener('click', () => { language = language === 'en' ? 'ko' : 'en'; applyLanguage(); });
+$('sound-toggle').addEventListener('click', async () => {
+  await apuAudio.setEnabled(!apuAudio.isEnabled());
+  apuAudio.sync(currentFrame, playing && !document.hidden, performance.now());
+  updateSoundButton();
+});
 $('timeline').addEventListener('input', scrubTimeline);
 $('timeline').addEventListener('change', finishTimelineScrub);
-$('backward').addEventListener('click', () => jumpPlayback(-1));
-$('forward').addEventListener('click', () => jumpPlayback(1));
+$('transport-controls').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-jump-ms]');
+  if (button) jumpPlayback(Number(button.dataset.jumpMs));
+});
 $('play').addEventListener('click', () => {
   scrubbing = false; playing = !playing; userExploring = true;
   if (!playing) { loadSequence++; playbackLoading = false; invalidateChartRefresh(); }
@@ -688,6 +742,8 @@ $('play').addEventListener('click', () => {
   $('play').textContent = playing ? 'Ⅱ' : '▶'; setMode('freeExplorer');
 });
 window.addEventListener('resize', drawChart);
+document.addEventListener('visibilitychange', () => apuAudio.sync(currentFrame, playing && !document.hidden, performance.now()));
+window.addEventListener('beforeunload', () => apuAudio.destroy());
 function tourPlaybackTime(elapsed, index) {
   const segment = elapsed - index * 18000;
   const dataRate = PLAYBACK_STEP_MS / PLAYBACK_INTERVAL_MS;
