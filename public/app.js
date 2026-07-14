@@ -29,6 +29,8 @@ let scrubbing = false, scrubRequest = null;
 let transportLoading = false;
 let sensorRefreshTimer = null;
 let sceneMarkerApi = null;
+let warningChartPulse = 0;
+let lastWarningChartDraw = 0;
 
 async function api(path) {
   const response = await fetch('/api/' + path);
@@ -62,6 +64,21 @@ function localizedLevel(level) {
   return t(key);
 }
 function syncSceneMarkers() { if (sceneMarkerApi) sceneMarkerApi.sync(); }
+
+function relatedWarningSignals(health) {
+  const names = new Set(['health_score']); const risks = health.risks || {};
+  const contributors = [
+    { risk: Number(risks.pressure_decay) || 0, names: ['pressure_decay_bar_min', 'reservoirs', 'tp3', 'comp'] },
+    { risk: Number(risks.pressure_recovery) || 0, names: ['pressure_recovery_bar_min', 'reservoirs', 'tp2', 'tp3', 'dv_pressure', 'dv_electric'] },
+    { risk: Number(risks.starts) || 0, names: ['starts_1h', 'motor_current', 'comp', 'dv_electric'] },
+    { risk: Number(risks.load_duty) || 0, names: ['load_duty_1h', 'motor_current', 'comp', 'dv_electric'] }
+  ];
+  const maximum = contributors.reduce((value, contributor) => Math.max(value, contributor.risk), 0);
+  contributors.forEach((contributor) => {
+    if (contributor.risk >= .35 || (maximum > 0 && contributor.risk === maximum)) contributor.names.forEach((name) => names.add(name));
+  });
+  return names;
+}
 
 function renderEventMarkers() {
   if (!manifest) return;
@@ -172,7 +189,7 @@ function prepareChart() {
     const points = groups[name] || [];
     let min = Infinity, max = -Infinity;
     points.forEach((point) => { min = Math.min(min, point.value); max = Math.max(max, point.value); });
-    return { color: colors[index % colors.length], points: points, min: min, span: Math.max(.000001, max - min) };
+    return { name: name, color: colors[index % colors.length], points: points, min: min, span: Math.max(.000001, max - min) };
   });
   if (!Number.isFinite(chartStart) || !Number.isFinite(chartEnd)) { chartStart = 0; chartEnd = 1; }
   $('legend').innerHTML = selected.map((name, i) => `<b><i style="background:${colors[i % colors.length]}"></i>${escapeHtml(sensorCopy(name)[0])}</b>`).join('');
@@ -189,11 +206,29 @@ function drawChart() {
   const centerTime = Number.isFinite(frameTime) ? frameTime : (chartStart + chartEnd) / 2;
   const chartSpan = Math.max(1, chartEnd - chartStart);
   const visibleStart = centerTime - chartSpan / 2;
+  const health = currentFrame && currentFrame.health || {};
+  const score = health.score == null ? NaN : Number(health.score);
+  const alertActive = Number.isFinite(score) && score <= 60;
+  const warningSignals = alertActive ? relatedWarningSignals(health) : null;
+  const alertStrength = alertActive ? .58 + .42 * Math.max(0, Math.min(1, (60 - score) / 60)) : 0;
   chartSeries.forEach((series) => {
     if (series.points.length < 2) return;
-    ctx.beginPath(); ctx.strokeStyle = series.color; ctx.lineWidth = 1.7;
+    const related = Boolean(warningSignals && warningSignals.has(series.name));
+    ctx.save(); ctx.beginPath(); ctx.strokeStyle = related ? 'rgba(255,93,102,.42)' : series.color; ctx.lineWidth = related ? 1.9 : 1.7;
     series.points.forEach((point, i) => { const x = (point.time - visibleStart) / chartSpan * w; const y = h - 14 - (point.value - series.min) / series.span * (h - 28); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
     ctx.stroke();
+    if (related) {
+      const glow = alertStrength * (.32 + warningChartPulse * .68);
+      ctx.strokeStyle = `rgba(255,24,56,${.28 + glow * .72})`; ctx.lineWidth = 2 + glow * 2.2;
+      ctx.shadowColor = '#ff1838'; ctx.shadowBlur = 5 + glow * 15; ctx.stroke();
+      const currentPoint = series.points.reduce((closest, point) => Math.abs(point.time - centerTime) < Math.abs(closest.time - centerTime) ? point : closest, series.points[0]);
+      const pointX = (currentPoint.time - visibleStart) / chartSpan * w;
+      const pointY = h - 14 - (currentPoint.value - series.min) / series.span * (h - 28);
+      if (pointX >= 0 && pointX <= w) {
+        ctx.fillStyle = `rgba(255,232,236,${.55 + glow * .45})`; ctx.beginPath(); ctx.arc(pointX, pointY, 2.4 + glow * 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
   });
   if (chartSeries.length) {
     const x = w / 2;
@@ -496,20 +531,6 @@ function initScene() {
       };
     });
   }
-  function relatedWarningSignals(health) {
-    const names = new Set(['health_score']); const risks = health.risks || {};
-    const contributors = [
-      { risk: Number(risks.pressure_decay) || 0, names: ['pressure_decay_bar_min', 'reservoirs', 'tp3', 'comp'] },
-      { risk: Number(risks.pressure_recovery) || 0, names: ['pressure_recovery_bar_min', 'reservoirs', 'tp2', 'tp3', 'dv_pressure', 'dv_electric'] },
-      { risk: Number(risks.starts) || 0, names: ['starts_1h', 'motor_current', 'comp', 'dv_electric'] },
-      { risk: Number(risks.load_duty) || 0, names: ['load_duty_1h', 'motor_current', 'comp', 'dv_electric'] }
-    ];
-    const maximum = contributors.reduce((value, contributor) => Math.max(value, contributor.risk), 0);
-    contributors.forEach((contributor) => {
-      if (contributor.risk >= .35 || (maximum > 0 && contributor.risk === maximum)) contributor.names.forEach((name) => names.add(name));
-    });
-    return names;
-  }
   function layoutMarkerColumn(records, side, width, height) {
     if (!records.length) return;
     const topMargin = 48, bottomMargin = 10, gap = 8, available = Math.max(40, height - topMargin - bottomMargin);
@@ -607,6 +628,10 @@ function initScene() {
     dryerValve.rotation.x = (Number(sensors.dv_electric) || 0) * Math.PI * .5;
     const warningPulse = .35 + .65 * Math.abs(Math.sin(motionTime * .009));
     const warningStrobe = Math.pow(Math.abs(Math.sin(motionTime * .018)), 6);
+    warningChartPulse = warningStrobe;
+    if (playing && alertActive && chartSeries.length && now - lastWarningChartDraw >= 80) {
+      drawChart(); lastWarningChartDraw = now;
+    }
     beaconMat.color.set(alertActive ? 0xff1838 : 0x54e6df); beaconMat.opacity = alertActive ? .62 + .38 * warningStrobe : .45 + .45 * Math.abs(Math.sin(motionTime * .002));
     warningLight.intensity = alertStrength * (2.8 + warningStrobe * 7.5); warningLight.distance = 11 + warningPulse * 6;
     warningCoreMat.opacity = alertStrength * (.45 + warningStrobe * .55); warningCore.scale.setScalar(1 + warningStrobe * 1.8);
