@@ -1,3 +1,5 @@
+![Machbase Neo 철도 압축 공기 처리 장치 상태 진단 데모](img/train-apu.png)
+
 # Machbase Neo · MetroPT-3 철도 압축 공기 처리 장치 상태 진단 데모
 
 MetroPT-3 전체 데이터셋으로 철도 차량의 압축 공기 처리 장치(Air Production Unit, APU)를 탐색하는 Machbase Neo 데모입니다. 영문·한글 화면과 90초 가이드 투어를 제공하며, 공식 공기 누출 발생 구간 전후의 센서 변화와 설명 가능한 건전성 지수를 함께 보여줍니다.
