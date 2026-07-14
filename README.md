@@ -101,11 +101,25 @@ data/raw/metropt-3/MetroPT3(AirCompressor).csv
 
 ## 4. 데모 서버 실행
 
+### 외부 Bash에서 실행
+
+`neo-train-apu-demo` 프로젝트 디렉터리에서 다음 명령을 실행합니다.
+
 ```sh
-../machbase-neo jsh app/server.js
+../machbase-neo jsh app/server.js --host 127.0.0.1 --port 56802
 ```
 
-브라우저에서 [http://127.0.0.1:56804](http://127.0.0.1:56804)를 엽니다. 수신 주소나 포트를 바꾸려면 `--host` 또는 `--port` 옵션을 사용합니다.
+### Machbase Neo 내부 JSH 셸에서 실행
+
+Machbase Neo 셸에서 작업 디렉터리를 `work/neo-train-apu-demo`로 이동한 다음 JSH 스크립트를 직접 실행합니다.
+
+```text
+work/neo-train-apu-demo > ./app/server.js --host 127.0.0.1 --port 56802
+```
+
+서버가 시작되면 브라우저에서 [http://127.0.0.1:56802](http://127.0.0.1:56802)를 엽니다. 루트의 `index.html`과 `main.html`도 이 주소로 자동 이동하며, 자동 이동이 차단되면 화면의 링크를 선택할 수 있습니다.
+
+다른 수신 주소나 포트를 사용하려면 `--host` 또는 `--port` 값을 변경하고 `index.html`과 `main.html`의 접속 주소도 동일하게 맞춰야 합니다.
 
 루트의 `index.html`, `main.html`, `side.html`과 `cgi-bin/api/*.js`는 Machbase Neo 패키지 배포 방식도 지원합니다. 데이터가 없으면 화면에 설치 안내를 표시하며, 합성 데이터나 이전에 남은 데이터를 실제 텔레메트리처럼 표시하지 않습니다.
 
