@@ -25,7 +25,7 @@ function route(ctx, fn) {
 
 const args = parseArgs(process.argv);
 const host = args.host || '127.0.0.1';
-const port = intArg(args.port, 56804);
+const port = intArg(args.port, 56802);
 const publicDir = path.join(ROOT, 'public');
 const indexFile = path.join(publicDir, 'index.html');
 const server = new http.Server({ network: 'tcp', address: host + ':' + port, env: process.env });

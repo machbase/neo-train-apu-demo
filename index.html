@@ -2,10 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=http://127.0.0.1:56802/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Machbase Neo · MetroPT-3 APU 데모</title>
 </head>
 <body>
-  <p><a href="http://127.0.0.1:56802/">철도 압축 공기 처리 장치 데모 열기</a></p>
+  <p id="status">데모 서버 주소를 확인하는 중입니다.</p>
+  <p><a id="demo-link" href="http://127.0.0.1:56802/">철도 압축 공기 처리 장치 데모 열기</a></p>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const target = new URL('http://127.0.0.1:56802/');
+      const currentHost = window.location.hostname;
+      const requestedHost = params.get('host');
+      const requestedPort = params.get('port');
+
+      if (requestedHost || currentHost) target.hostname = requestedHost || currentHost;
+      if (requestedPort && /^\d{1,5}$/.test(requestedPort)) target.port = requestedPort;
+
+      const link = document.getElementById('demo-link');
+      link.href = target.href;
+      document.getElementById('status').textContent = target.href + ' 주소로 이동합니다.';
+      window.location.replace(target.href);
+    })();
+  </script>
 </body>
 </html>
