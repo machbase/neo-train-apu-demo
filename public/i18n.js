@@ -1,0 +1,81 @@
+export const UI = {
+  en: {
+    documentTitle: 'Machbase Neo · MetroPT Condition Intelligence', appTitle: 'See the leak before the alarm.', eyebrow: 'MACHBASE NEO · REAL IIoT DATA', timestamps: 'timestamps · 15 raw sensors',
+    setupRequired: 'DATASET REQUIRED', setupTitle: 'Load the real MetroPT-3 compressor timeline',
+    setupCopy: 'This demo never substitutes synthetic data. Download the CC BY 4.0 UCI dataset, verify it, then ingest it into Machbase Neo.', retry: 'Retry connection',
+    timezone: 'Dataset local time · timezone unspecified', restart: '↻ Restart 90-second tour', sceneAsset: 'METRO CAR · AIR PRODUCTION UNIT',
+    waiting: 'WAITING FOR TELEMETRY', health: 'CONDITION HEALTH', formula: '40% decay · 25% recovery · 20% starts · 15% duty',
+    signalWindow: 'SIGNAL WINDOW', liveEvidence: 'LIVE EVIDENCE', readonlySql: 'READ-ONLY SQL', telemetryRows: 'telemetry rows',
+    sensorValues: 'sensor values', rollupInterval: 'rollup interval', waitingQuery: 'Waiting for a query…', fullTimeline: 'Full seven-month timeline',
+    guidedTour: 'GUIDED TOUR', freeExplorer: 'FREE EXPLORER', scrubbing: 'SCRUBBING', queryError: 'QUERY ERROR', endOfData: 'END OF DATA',
+    timelineComplete: 'TIMELINE COMPLETE', startOfData: 'START OF DATA', noSample: 'NO SAMPLE IN THIS GAP', nominal: 'AIR SYSTEM · NOMINAL',
+    driftDetected: 'CONDITION DRIFT DETECTED', critical: 'AIR SYSTEM · CRITICAL', raw: 'raw', selectSignals: 'Select one or more signals',
+    liveCursor: '±8 hours around cursor · live cursor', liveData: '±8 hours · live cursor · data every 2s',
+    skippedNext: 'Skipped a telemetry gap · resumed at next sample', skippedPrev: 'Skipped a telemetry gap · resumed at previous sample',
+    playPause: 'Play or pause', back10: 'Back 10 minutes', forward10: 'Forward 10 minutes', backShort: '−10 min', forwardShort: '+10 min', language: '한국어',
+    params: 'params', state: 'state', officialEvent: 'Official leak interval',
+    partMotor: 'Drive motor', partIntake: 'Air intake', partCompressor: 'Screw compressor', partSeparator: 'Oil separator',
+    partDryer: 'Twin air dryer', partReservoir: 'Air reservoir', partPanel: 'Control panel', partPipe: 'Delivery pipe',
+    freeTitle: 'Free timeline explorer', freeCopy: 'Choose any number of signals and scrub the full seven-month record. Every view runs a read-only query against Machbase Neo.',
+    risk: 'risk', pressureDecay: 'Pressure decay', pressureRecovery: 'Pressure recovery', startsHour: 'Starts / hour', loadDuty: 'Load duty',
+    levelNormal: 'NORMAL', levelDegraded: 'DEGRADED', levelCritical: 'CRITICAL', levelBaseline: 'BASELINE', levelUnknown: 'UNKNOWN',
+    stories: {
+      fleet: ['Seven months. One breathing machine.', '1,516,948 real timestamps capture pressure, valves, motor load and dryer operation in a train air-production unit.'],
+      baseline: ['February teaches us normal.', 'Machbase Neo turns the first calendar month into transparent percentiles—no opaque model and no invented accuracy claim.'],
+      drift: ['The compressor starts working harder.', 'Load duty and pressure decay move beyond the February envelope. Oil temperature remains visible, but is excluded from the score to avoid seasonal bias.'],
+      warning: ['Four causes. One early warning.', 'Decay, recovery, starts and duty remain abnormal long enough to create a persistent, auditable condition alert.'],
+      failure: ['Hours later, the official leak begins.', 'The red interval comes from the dataset authors. The earlier warning is derived from stored telemetry and a formula anyone can inspect.']
+    }
+  },
+  ko: {
+    documentTitle: 'Machbase Neo · MetroPT 상태 인텔리전스', appTitle: '알람보다 먼저 누설을 발견하세요.', eyebrow: 'MACHBASE NEO · 실제 IIoT 데이터', timestamps: '타임스탬프 · 원시 센서 15개',
+    setupRequired: '데이터셋 필요', setupTitle: '실제 MetroPT-3 압축기 타임라인을 적재하세요',
+    setupCopy: '이 데모는 합성 데이터를 사용하지 않습니다. CC BY 4.0 UCI 데이터셋을 다운로드하고 검증한 다음 Machbase Neo에 적재하세요.', retry: '연결 다시 시도',
+    timezone: '데이터셋 로컬 시간 · 시간대 미지정', restart: '↻ 90초 투어 다시 시작', sceneAsset: '도시철도 차량 · 공기생산장치',
+    waiting: '텔레메트리 대기 중', health: '설비 건전성', formula: '압력감쇠 40% · 회복 25% · 기동 20% · 부하 15%',
+    signalWindow: '센서 신호 창', liveEvidence: '실시간 근거', readonlySql: '읽기 전용 SQL', telemetryRows: '텔레메트리 행',
+    sensorValues: '센서 값', rollupInterval: '롤업 간격', waitingQuery: '쿼리를 기다리는 중…', fullTimeline: '전체 7개월 타임라인',
+    guidedTour: '가이드 투어', freeExplorer: '자유 탐색', scrubbing: '시간 이동 중', queryError: '쿼리 오류', endOfData: '데이터 끝',
+    timelineComplete: '타임라인 완료', startOfData: '데이터 시작', noSample: '이 구간에는 샘플 없음', nominal: '공기 시스템 · 정상',
+    driftDetected: '상태 변화 감지', critical: '공기 시스템 · 위험', raw: '원시', selectSignals: '하나 이상의 신호를 선택하세요',
+    liveCursor: '커서 기준 ±8시간 · 실시간 커서', liveData: '±8시간 · 실시간 커서 · 2초마다 데이터 갱신',
+    skippedNext: '텔레메트리 공백을 건너뛰어 다음 샘플에서 재개', skippedPrev: '텔레메트리 공백을 건너뛰어 이전 샘플에서 재개',
+    playPause: '재생 또는 일시정지', back10: '10분 뒤로', forward10: '10분 앞으로', backShort: '−10분', forwardShort: '+10분', language: 'EN',
+    params: '바인딩', state: '상태', officialEvent: '공식 누설 구간',
+    partMotor: '구동 모터', partIntake: '공기 흡입구', partCompressor: '스크루 압축기', partSeparator: '오일 분리기',
+    partDryer: '쌍둥이 공기 건조탑', partReservoir: '공기 저장 탱크', partPanel: '제어반', partPipe: '공기 공급 배관',
+    freeTitle: '자유 타임라인 탐색', freeCopy: '신호를 원하는 만큼 선택하고 전체 7개월 기록을 탐색하세요. 모든 화면은 Machbase Neo 읽기 전용 쿼리로 생성됩니다.',
+    risk: '위험도', pressureDecay: '압력 감쇠', pressureRecovery: '압력 회복', startsHour: '시간당 기동', loadDuty: '부하 운전율',
+    levelNormal: '정상', levelDegraded: '주의', levelCritical: '위험', levelBaseline: '기준선', levelUnknown: '알 수 없음',
+    stories: {
+      fleet: ['7개월, 하나의 숨 쉬는 기계.', '1,516,948개의 실제 타임스탬프가 도시철도 공기생산장치의 압력, 밸브, 모터 부하와 건조탑 동작을 기록합니다.'],
+      baseline: ['2월 데이터가 정상 상태를 학습시킵니다.', 'Machbase Neo가 첫 달을 투명한 백분위 기준선으로 만듭니다. 불투명한 모델이나 꾸며낸 정확도는 없습니다.'],
+      drift: ['압축기의 일이 점점 많아집니다.', '부하 운전율과 압력 감쇠가 2월 정상 범위를 벗어납니다. 계절 영향을 줄이기 위해 오일 온도는 표시하지만 점수에서는 제외합니다.'],
+      warning: ['네 가지 원인, 하나의 조기 경보.', '감쇠, 회복, 기동 횟수와 부하가 충분히 오래 비정상으로 유지되면 설명 가능한 상태 경보가 생성됩니다.'],
+      failure: ['몇 시간 뒤 공식 누설이 시작됩니다.', '붉은 구간은 데이터셋 제작자가 제공한 고장 기록입니다. 앞선 경보는 저장된 텔레메트리와 검증 가능한 공식에서 도출됩니다.']
+    }
+  }
+};
+
+export const SENSOR_COPY = {
+  tp2: { en: ['Compressor pressure', 'Pressure measured directly at the compressor outlet.'], ko: ['압축기 압력', '압축기 출구에서 직접 측정한 압력입니다.'] },
+  tp3: { en: ['Pneumatic panel pressure', 'Pressure delivered to the train pneumatic control panel.'], ko: ['공압 패널 압력', '차량 공압 제어 패널로 공급되는 압력입니다.'] },
+  h1: { en: ['Cyclonic separator drop', 'Pressure signature produced when the cyclonic separator discharges.'], ko: ['사이클론 분리기 압력', '사이클론 분리기가 배출할 때 발생하는 압력 변화입니다.'] },
+  dv_pressure: { en: ['Dryer purge pressure', 'Pressure drop while a dryer tower purges; near zero also identifies loaded compressor operation.'], ko: ['건조탑 퍼지 압력', '건조탑 배출 시 압력 강하이며, 0에 가까우면 압축기 부하 운전을 나타냅니다.'] },
+  reservoirs: { en: ['Reservoir pressure', 'Downstream storage pressure; it should closely track pneumatic panel pressure.'], ko: ['저장 탱크 압력', '하류 저장 탱크 압력으로 공압 패널 압력과 비슷해야 합니다.'] },
+  oil_temperature: { en: ['Compressor oil temperature', 'Lubricating oil temperature inside the compressor package.'], ko: ['압축기 오일 온도', '압축기 패키지 내부 윤활유의 온도입니다.'] },
+  motor_current: { en: ['Motor phase current', 'One phase of the three-phase motor: off, unloaded, loaded and starting states have distinct levels.'], ko: ['모터 상전류', '3상 모터 한 상의 전류로 정지, 무부하, 부하, 기동 상태를 구분합니다.'] },
+  comp: { en: ['Air intake valve', 'Active indicates no air intake: the compressor is off or operating unloaded.'], ko: ['공기 흡입 밸브', '활성 상태는 흡입이 없으며 압축기가 정지 또는 무부하임을 뜻합니다.'] },
+  dv_electric: { en: ['Outlet valve command', 'Electrical command for the compressor outlet valve; active during loaded operation.'], ko: ['출구 밸브 명령', '압축기 출구 밸브의 전기 신호로 부하 운전 중 활성화됩니다.'] },
+  towers: { en: ['Active dryer tower', 'Selects which of the two desiccant towers dries air while the other drains moisture.'], ko: ['활성 건조탑', '두 흡착식 건조탑 중 건조 운전과 수분 배출을 담당할 탑을 선택합니다.'] },
+  mpg: { en: ['Load demand', 'Starts loaded compression when APU pressure falls below approximately 8.2 bar.'], ko: ['부하 운전 요구', 'APU 압력이 약 8.2bar 아래로 내려가면 부하 압축을 시작합니다.'] },
+  lps: { en: ['Low-pressure switch', 'Activates when system pressure drops below approximately 7 bar.'], ko: ['저압 스위치', '시스템 압력이 약 7bar 아래로 내려가면 활성화됩니다.'] },
+  pressure_switch: { en: ['Dryer discharge switch', 'Detects discharge activity in the alternating air-dryer towers.'], ko: ['건조탑 배출 스위치', '교대식 공기 건조탑의 배출 동작을 감지합니다.'] },
+  oil_level: { en: ['Oil-level alarm', 'Active when compressor oil level is below the expected operating level.'], ko: ['오일 레벨 경보', '압축기 오일이 정상 운전 수준보다 낮을 때 활성화됩니다.'] },
+  flow_impulse: { en: ['Air-flow impulse', 'Pulse output proportional to the absolute air flow from the APU to the reservoirs.'], ko: ['공기 유량 펄스', 'APU에서 저장 탱크로 흐르는 절대 공기량에 비례한 펄스입니다.'] },
+  health_score: { en: ['Condition health score', 'Explainable 0–100 score combining decay, recovery, starts and load duty.'], ko: ['상태 건전성 점수', '감쇠, 회복, 기동 횟수와 부하 운전율을 결합한 설명 가능한 0–100 점수입니다.'] },
+  load_duty_1h: { en: ['Loaded duty · 1 hour', 'Percentage of covered time spent compressing air under load during the trailing hour.'], ko: ['1시간 부하 운전율', '최근 1시간 유효 구간 중 부하 압축 운전에 사용한 시간 비율입니다.'] },
+  starts_1h: { en: ['Starts · 1 hour', 'Number of transitions into loaded compressor operation during the trailing hour.'], ko: ['1시간 기동 횟수', '최근 1시간 동안 부하 압축 운전으로 전환된 횟수입니다.'] },
+  pressure_decay_bar_min: { en: ['Pressure decay rate', 'Reservoir pressure loss rate while the compressor is not loaded.'], ko: ['압력 감쇠율', '압축기가 부하 운전하지 않을 때 저장 압력이 감소하는 속도입니다.'] },
+  pressure_recovery_bar_min: { en: ['Pressure recovery rate', 'Reservoir pressure gain rate while the compressor is loaded.'], ko: ['압력 회복률', '압축기가 부하 운전할 때 저장 압력이 회복되는 속도입니다.'] }
+};

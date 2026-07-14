@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Machbase Neo · MetroPT Condition Intelligence</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./controls.css?v=20260714-5">
+</head>
+<body>
+  <main id="app" class="shell">
+    <header class="topbar">
+      <div><span class="eyebrow" data-i18n="eyebrow">MACHBASE NEO · REAL IIoT DATA</span><h1 data-i18n="appTitle">See the leak before the alarm.</h1></div>
+      <div class="top-actions"><button id="language-toggle" type="button">한국어</button><div class="dataset-pill"><span class="live-dot"></span><strong id="row-count">—</strong><small data-i18n="timestamps"> timestamps · 15 raw sensors</small></div></div>
+    </header>
+
+    <section id="setup" class="setup hidden">
+      <span class="eyebrow" data-i18n="setupRequired">DATASET REQUIRED</span>
+      <h2 data-i18n="setupTitle">Load the real MetroPT-3 compressor timeline</h2>
+      <p data-i18n="setupCopy">This demo never substitutes synthetic data. Download the CC BY 4.0 UCI dataset, verify it, then ingest it into Machbase Neo.</p>
+      <pre><code>../machbase-neo jsh scripts/download-data.js
+# Run the printed curl / sha256sum / unzip commands
+../machbase-neo jsh scripts/ingest.js</code></pre>
+      <button id="retry" data-i18n="retry">Retry connection</button>
+    </section>
+
+    <section id="experience" class="experience hidden">
+      <div class="story-card glass">
+        <div class="chapter-row"><span id="chapter-index">01 / 05</span><span id="mode">GUIDED TOUR</span></div>
+        <h2 id="chapter-title">A train breathes through compressed air.</h2>
+        <p id="chapter-copy">One compact APU powers brakes, doors and suspension. Every pressure pulse is stored as time-series evidence.</p>
+        <div class="time-readout"><span id="current-time">—</span><small data-i18n="timezone">Dataset local time · timezone unspecified</small></div>
+        <button id="restart" data-i18n="restart">↻ Restart 90-second tour</button>
+      </div>
+
+      <div id="scene" class="scene"><div class="scene-label"><span data-i18n="sceneAsset">METRO CAR · AIR PRODUCTION UNIT</span><b id="scene-state" data-i18n="waiting">WAITING FOR TELEMETRY</b></div><div id="sensor-markers" class="sensor-markers" aria-hidden="true"></div></div>
+
+      <aside class="health-card glass">
+        <div class="health-head"><span data-i18n="health">CONDITION HEALTH</span><span id="health-level" class="level">—</span></div>
+        <div id="gauge" class="gauge"><div><strong id="health-score">—</strong><small>/ 100</small></div></div>
+        <div id="contributors" class="contributors"></div>
+        <p class="formula" data-i18n="formula">40% decay · 25% recovery · 20% starts · 15% duty</p>
+      </aside>
+
+      <section class="chart-card glass">
+        <div class="panel-title"><div><span data-i18n="signalWindow">SIGNAL WINDOW</span><strong id="window-label">—</strong></div><div id="legend" class="legend"></div></div>
+        <div class="sensor-toolbar"><div id="sensor-picker" class="sensor-picker"></div><div id="sensor-tooltip" class="sensor-tooltip" role="tooltip" aria-hidden="true"></div></div>
+        <canvas id="chart"></canvas>
+      </section>
+
+      <aside class="evidence-card glass">
+        <div class="panel-title"><div><span data-i18n="liveEvidence">LIVE EVIDENCE</span><strong data-i18n="readonlySql">READ-ONLY SQL</strong></div><span id="latency">— ms</span></div>
+        <div class="proof-grid"><div><b id="proof-rows">—</b><small data-i18n="telemetryRows">telemetry rows</small></div><div><b id="proof-values">—</b><small data-i18n="sensorValues">sensor values</small></div><div><b id="rollup">—</b><small data-i18n="rollupInterval">rollup interval</small></div></div>
+        <pre id="sql" data-i18n="waitingQuery">Waiting for a query…</pre>
+        <pre id="result" class="result">[]</pre>
+      </aside>
+
+      <section class="timeline-card glass">
+        <div class="transport"><div class="transport-controls"><button id="backward" data-i18n="backShort" data-i18n-title="back10" aria-label="Back 10 minutes" title="Back 10 minutes">−10 min</button><button id="play" data-i18n-aria="playPause" aria-label="Play or pause">Ⅱ</button><button id="forward" data-i18n="forwardShort" data-i18n-title="forward10" aria-label="Forward 10 minutes" title="Forward 10 minutes">+10 min</button></div><div class="transport-copy"><strong id="timeline-title" data-i18n="fullTimeline">Full seven-month timeline</strong><small id="range-label">—</small></div></div>
+        <input id="timeline" type="range" min="0" max="10000" step="any" value="0">
+        <div class="timeline-times"><span id="timeline-min">—</span><strong id="timeline-current">—</strong><span id="timeline-max">—</span></div>
+        <div id="event-markers" class="event-markers"></div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="./app.js?v=20260714-14"></script>
+</body>
+</html>

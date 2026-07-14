@@ -1,0 +1,4 @@
+data/raw/metropt-3/*
+!data/raw/metropt-3/.gitkeep
+*.log
+

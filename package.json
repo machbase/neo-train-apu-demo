@@ -1,0 +1,14 @@
+{
+  "name": "machbase-neo-metropt-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Explainable predictive-maintenance demo for Machbase Neo and MetroPT-3",
+  "scripts": {
+    "download-data": "machbase-neo jsh scripts/download-data.js",
+    "schema": "machbase-neo jsh scripts/schema.js",
+    "ingest": "machbase-neo jsh scripts/ingest.js",
+    "selftest": "machbase-neo jsh scripts/selftest.js",
+    "server": "machbase-neo jsh app/server.js"
+  }
+}
+

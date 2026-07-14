@@ -1,0 +1,271 @@
+.transport .transport-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.transport .transport-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.transport-controls button {
+  width: 38px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.transport-controls #play {
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.timeline-times {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin: -1px 3px 0;
+  color: #68888a;
+  font: 8px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.timeline-times strong {
+  color: #54e6df;
+  font-size: 9px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: rgba(84, 230, 223, .08);
+}
+
+.timeline-times span:last-child {
+  text-align: right;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.sensor-toolbar {
+  position: relative;
+  z-index: 5;
+  margin: -1px 0 6px;
+}
+
+.sensor-picker {
+  max-height: 78px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(84, 230, 223, .35) transparent;
+  gap: 6px;
+  padding: 1px 2px 4px;
+  margin: 0;
+}
+
+.sensor-picker button {
+  min-height: 27px;
+  padding: 5px 9px;
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease;
+}
+
+.sensor-picker button:hover,
+.sensor-picker button:focus-visible {
+  color: #e8f7f6;
+  border-color: rgba(84, 230, 223, .75);
+  background: rgba(84, 230, 223, .12);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.sensor-tooltip {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% + 7px);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 15px;
+  border: 1px solid rgba(84, 230, 223, .5);
+  border-radius: 12px;
+  background: rgba(5, 19, 25, .97);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .52), 0 0 22px rgba(84, 230, 223, .1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+}
+
+.sensor-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.sensor-tooltip strong {
+  color: #54e6df;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.sensor-tooltip span {
+  color: #d7eceb;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sensor-tooltip small {
+  color: #78999b;
+  font: 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+
+.chart-card canvas {
+  flex: 1 1 auto;
+  min-height: 112px;
+  height: auto;
+}
+
+.scene-label { z-index: 6; }
+
+.sensor-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.equipment-marker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transform: translate(-6px, -50%);
+  transition: opacity .15s ease;
+  will-change: left, top;
+}
+
+.equipment-marker > span {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border: 2px solid #e8ffff;
+  border-radius: 50%;
+  background: #54e6df;
+  box-shadow: 0 0 0 5px rgba(84, 230, 223, .13), 0 0 16px #54e6df;
+}
+
+.equipment-marker label {
+  display: flex;
+  min-width: 112px;
+  max-width: 210px;
+  max-height: 112px;
+  padding: 7px 9px;
+  overflow: hidden;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(84, 230, 223, .32);
+  border-radius: 9px;
+  background: rgba(4, 17, 23, .88);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(7px);
+}
+
+.equipment-marker label b {
+  color: #dffdfb;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.equipment-marker label small {
+  display: block;
+  overflow: hidden;
+  color: #9bbabb;
+  font-size: 8px;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.equipment-marker label i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+.legend {
+  max-height: 34px;
+  overflow-y: auto;
+  justify-content: flex-end;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 901px) {
+  .experience { grid-template-rows: minmax(240px, 1fr) minmax(225px, 30vh) 78px; }
+  .timeline-card { padding: 5px 14px; }
+  .timeline-card .transport { min-height: 29px; }
+  .timeline-card .transport-controls button { width: 34px; height: 27px; }
+  .timeline-card #timeline { display: block; height: 9px; margin: 0; }
+  .timeline-card .timeline-times { margin-top: -2px; }
+  .timeline-card .event-markers { height: 4px; margin-top: -2px; }
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .experience { grid-template-rows: 200px 210px 72px; }
+  .sensor-picker { max-height: 62px; }
+  .sensor-picker button { min-height: 23px; padding: 3px 7px; font-size: 9px; }
+  .sensor-tooltip { padding: 9px 12px; }
+  .sensor-tooltip strong { font-size: 12px; }
+  .sensor-tooltip span { font-size: 11px; }
+}
+
+@media (max-width: 900px) {
+  .experience { grid-template-rows: auto 420px auto 323px 90px auto; }
+  .sensor-tooltip { grid-template-columns: 1fr; gap: 4px; }
+  .sensor-tooltip strong { font-size: 13px; }
+  .sensor-tooltip span { font-size: 12px; }
+  .sensor-tooltip small { display: none; }
+  .equipment-marker label { max-width: 155px; padding: 5px 7px; }
+  .equipment-marker label b { font-size: 9px; }
+  .equipment-marker label small { font-size: 7px; }
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#language-toggle {
+  border: 1px solid rgba(84, 230, 223, .35);
+  background: rgba(84, 230, 223, .09);
+  color: #8ff9f3;
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#language-toggle:hover,
+#language-toggle:focus-visible {
+  background: rgba(84, 230, 223, .18);
+  outline: 1px solid rgba(84, 230, 223, .55);
+}
+
+.dataset-pill small { margin-left: 4px; }
+
+@media (max-width: 900px) {
+  .top-actions { gap: 6px; }
+  #language-toggle { padding: 8px 11px; }
+}
